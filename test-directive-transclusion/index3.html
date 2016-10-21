@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Example - example-ng-transclude-production</title>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+  </head>
+  <body ng-app="transcludeFallbackContentExample">
+
+    <script>
+
+      var app = angular.module('transcludeFallbackContentExample', []);
+
+      app.controller('MyController', ["$scope", function($scope){
+        $scope.tests = [{
+          id: "test1",
+          val1: "init value1",
+          val2: "init value2"
+        }, {
+          id: "test2",
+          val1: "",
+          val2: "init value2"
+        }, {
+          id: "test3",
+          val1: "init value1",
+          val2: ""
+        }, {
+          id: "test4",
+          val1: ""
+        }];        
+      }]);
+
+      app.directive('myDir', function(){
+          var directive = {
+            restrict: 'E',
+            scope: {
+              val: "=",
+              parentId: "="
+            },
+            transclude: true,
+            template: '<span><dir>directive {{elId}} : {{status ? "show" : "hide"}}</dir><ng-transclude></ng-transclude></span>',
+
+            link: function(scope, element, attr){              
+              scope.elId = attr.id;
+
+              console.log("dir #" + scope.elId + " - scope.val: " + scope.val);
+              scope.registerMyDirResult = function(childVal){
+                console.log("dir " + scope.elId + " - registerMyDirResult called with: " + childVal);
+                if(!scope.status && childVal){
+                  scope.status = childVal;
+                }
+              };
+
+              scope.status = Boolean(scope.val) || (scope.myDirChildrenResults && scope.myDirChildrenResults.find(function(childResult){
+                return Boolean(childResult);
+              }));
+
+              if(scope.status && scope.$parent && scope.$parent.$parent) {
+                if(!scope.$parent.$parent.myDirChildrenResults){
+                  scope.$parent.$parent.myDirChildrenResults = [];
+                }
+                scope.$parent.$parent.myDirChildrenResults.push(scope.status);
+              }
+            }
+          };
+          
+          return directive;
+      });
+
+    </script>
+
+    <div ng-controller="MyController as ctrl">
+      <dir ng-repeat="test in tests">
+        <br/>        
+        <my-dir id="test.id">
+          <my-dir id="dir1" data-val="test.val1"></my-dir>
+          <my-dir id="dir2" data-val="test.val2"></my-dir>
+        </my-dir>
+      </div>
+    </div>
+
+  </body>
+</html>

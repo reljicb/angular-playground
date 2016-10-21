@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Example - example-ng-transclude-production</title>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+  </head>
+  <body ng-app="transcludeFallbackContentExample">
+
+    <script>
+
+      var app = angular.module('transcludeFallbackContentExample', []);
+
+      app.controller('ctrl', ["$scope", function($scope){
+        $scope.val1 = "init value1";
+        $scope.val2 = "init value2";
+      }]);
+
+      app.directive('dir1', function(){
+          var directive = {
+            restrict: 'E',
+            scope: {
+              dir1_1Val: "=val1",
+              dir1_2Val: "=val2"
+            },
+            transclude: true,
+            template: '<ng-transclude></ng-transclude>',
+
+            link: function($scope){
+              $scope.func1 = function(val){
+                console.log(" -- echo from dir1 func1 - val: " + val);
+              }
+            }
+          };
+          
+          return directive;
+      });
+
+      app.directive('dir2', function(){
+        var directive = {
+          restrict: 'E',
+          scope: {
+            dir2Val: "=val",  
+            fn1: "&fn1"
+          },
+          template: '<dir><span>Title: </span><span ng-bind="dir2Val"></span></dir>',
+
+          val1: "asfdad",
+          val2: "vafad",
+
+          link: function($scope){
+            $scope.fn1("hello from dir2");
+          }
+        };
+
+        return directive;
+      });
+
+    </script>
+
+    <div ng-controller="ctrl">
+      <dir1 val1="val1" val2="val2">
+        <dir2 data-val="$parent.dir1_1Val" data-fn1="$parent.func1()"></dir2>
+        <dir2 data-val="$parent.dir1_2Val"></dir2>
+      </dir1>
+    </div>
+
+  </body>
+</html>
